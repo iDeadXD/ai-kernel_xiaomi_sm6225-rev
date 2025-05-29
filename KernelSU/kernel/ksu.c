@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/kobject.h>
 #include <linux/module.h>
+#include <linux/version.h> /* LINUX_VERSION_CODE, KERNEL_VERSION macros */
 #include <linux/workqueue.h>
 #include <linux/init.h>
 
@@ -38,6 +39,7 @@ bool ksu_queue_work(struct work_struct *work)
 	return queue_work(ksu_workqueue, work);
 }
 
+#ifdef KSU_USE_STRUCT_FILENAME
 extern int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
 					void *argv, void *envp, int *flags);
 
@@ -51,6 +53,7 @@ int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
 	return ksu_handle_execveat_sucompat(fd, filename_ptr, argv, envp,
 					    flags);
 }
+#endif // KSU_USE_STRUCT_FILENAME
 
 int __init ksu_kernelsu_init(void)
 {
@@ -58,7 +61,6 @@ int __init ksu_kernelsu_init(void)
 		pr_info_once(" is disabled");
 		return 0;
 	}
-
 #ifdef CONFIG_KSU_DEBUG
 	pr_alert("*************************************************************");
 	pr_alert("**     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **");
@@ -88,7 +90,7 @@ void ksu_kernelsu_exit(void)
 {
 	if (enable_ksu < 1)
 		return;
-
+	
 	ksu_allowlist_exit();
 
 	ksu_throne_tracker_exit();
